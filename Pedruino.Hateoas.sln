@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{64C8A694-DFD3-4C6D-A903-E786913F5F1D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{1EBBC14E-202B-41FF-ABC5-20909ABF852F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pedruino.Hateoas.WebApi", "src\Pedruino.Hateoas.WebApi\Pedruino.Hateoas.WebApi.csproj", "{8BA9C590-DCB0-4B6F-A0F4-609FB0E92E55}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8BA9C590-DCB0-4B6F-A0F4-609FB0E92E55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BA9C590-DCB0-4B6F-A0F4-609FB0E92E55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BA9C590-DCB0-4B6F-A0F4-609FB0E92E55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BA9C590-DCB0-4B6F-A0F4-609FB0E92E55}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8BA9C590-DCB0-4B6F-A0F4-609FB0E92E55} = {64C8A694-DFD3-4C6D-A903-E786913F5F1D}
+	EndGlobalSection
+EndGlobal
