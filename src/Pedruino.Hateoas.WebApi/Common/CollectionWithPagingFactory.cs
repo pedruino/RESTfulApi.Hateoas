@@ -1,12 +1,7 @@
-using Pedruino.Hateoas.WebApi.Controllers;
-
 namespace Pedruino.Hateoas.WebApi.Common;
 
 public class CollectionWithPagingFactory : ICollectionWithPagingFactory
 {
-    public const string NextRelation = "next";
-    public const string PreviousRelation = "previous";
-    public const string SelfRelation = "self";
     private readonly ILinkService _linkService;
 
     public CollectionWithPagingFactory(ILinkService linkService)
@@ -57,7 +52,7 @@ public class CollectionWithPagingFactory : ICollectionWithPagingFactory
             [PageParameters.PageSizeKey] = pageSize
         };
 
-        return NewLink(NextRelation, self, parameters);
+        return NewLink(LinkService.Relation.Next, self, parameters);
     }
     
     private Link? GetPreviousLink(Link self, PageParameters pageParameters, bool condition)
@@ -73,7 +68,7 @@ public class CollectionWithPagingFactory : ICollectionWithPagingFactory
             [PageParameters.PageSizeKey] = pageSize
         };
 
-        return NewLink(PreviousRelation, self, parameters);
+        return NewLink(LinkService.Relation.Previous, self, parameters);
     }
 
     private Link NewLink(string relation, Link self, RouteValueDictionary parameters) 

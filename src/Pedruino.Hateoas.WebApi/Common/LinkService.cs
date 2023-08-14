@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
-using Pedruino.Hateoas.WebApi.Controllers;
 
 namespace Pedruino.Hateoas.WebApi.Common;
 
@@ -21,5 +20,15 @@ public class LinkService : ILinkService
             Rel = relation,
             Href = _urlHelper.ActionLink(action, values: new RouteValueDictionary(values))
         };
+    }
+
+    public Link CreateSelfLink(string action, object? values = null) 
+        => CreateLink(Relation.Self, action, values);
+
+    public static class Relation
+    {
+        public const string Self = "self";
+        public const string Next = "next";
+        public const string Previous = "previous";
     }
 }

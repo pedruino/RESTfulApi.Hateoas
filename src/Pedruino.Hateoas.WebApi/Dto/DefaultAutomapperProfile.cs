@@ -11,7 +11,7 @@ public class DefaultAutomapperProfile : Profile
         CreateMap<Person, PersonDto>();
         CreateMap<Address, AddressDto>();
         CreateMap<Phone, PhoneDto>();
-        CreateMap<Product, ProdutctDto>();
+        CreateMap<Product, ProductDto>();
         CreateMap(typeof(Page<>), typeof(Page<>));
     }
 }

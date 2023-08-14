@@ -1,6 +1,5 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Pedruino.Hateoas.WebApi.Common;
 using Pedruino.Hateoas.WebApi.Dto;
 using Pedruino.Hateoas.WebApi.Infrastructure;
@@ -11,12 +10,17 @@ namespace Pedruino.Hateoas.WebApi.Controllers;
 [Route("api/[controller]")]
 public class PersonController : ControllerBase
 {
+    private readonly ICollectionWithPagingFactory _collectionWithPagingFactory;
+    private readonly ILinkService _linkService;
     private readonly IMapper _mapper;
     private readonly IPersonRepository _personRepository;
-    private readonly ILinkService _linkService;
-    private readonly ICollectionWithPagingFactory _collectionWithPagingFactory;
+    private const string PersonRelationAll = "";
+    private const string PersonRelationAddresses = "addresses";
+    private const string PersonRelationPhones = "phones";
+    private const string PersonRelationProducts = "products";
 
-    public PersonController(IPersonRepository personRepository, IMapper mapper, ILinkService linkService, ICollectionWithPagingFactory collectionWithPagingFactory)
+    public PersonController(IPersonRepository personRepository, IMapper mapper, ILinkService linkService,
+        ICollectionWithPagingFactory collectionWithPagingFactory)
     {
         _personRepository = personRepository;
         _mapper = mapper;
@@ -24,23 +28,18 @@ public class PersonController : ControllerBase
         _collectionWithPagingFactory = collectionWithPagingFactory;
     }
 
-    [HttpGet("")]
+    [HttpGet($"{PersonRelationAll}")]
     public async Task<IActionResult> GetPeople([FromQuery] PageParameters pageParameters, CancellationToken ct)
     {
-        var pagePeople = _mapper.Map<Page<PersonDto>>(await _personRepository.GetAll(pageParameters, ct));
-        foreach (var personDto in pagePeople.Items)
+        var page = await _personRepository.GetAll(pageParameters, ct);
+        var pageDto = _mapper.Map<Page<PersonDto>>(page);
+        foreach (var personDto in pageDto.Items)
         {
-            var linkParameters = new { document = personDto.Document };
-            var innerSelf = _linkService.CreateLink("self", nameof(GetPersonData), linkParameters);
-            var addresses = _linkService.CreateLink("addresses", nameof(GetAddresses), linkParameters);
-            var phones = _linkService.CreateLink("phones", nameof(GetPhones), linkParameters);
-            var products = _linkService.CreateLink("products", nameof(GetProducts), linkParameters);
-
-            personDto.Links = new[] { innerSelf, addresses, phones, products };
+            personDto.Links = GetPersonLinks(personDto);
         }
 
-        var self = _linkService.CreateLink(CollectionWithPagingFactory.SelfRelation, nameof(GetPeople));
-        var collection = _collectionWithPagingFactory.Create(pagePeople, pageParameters, self);
+        var self = _linkService.CreateSelfLink(nameof(GetPeople));
+        var collection = _collectionWithPagingFactory.Create(pageDto, pageParameters, self);
 
         return Ok(collection);
     }
@@ -50,51 +49,54 @@ public class PersonController : ControllerBase
     {
         var person = _mapper.Map<PersonDto>(await _personRepository.GetByDocument(document, ct));
         if (person == null) return NotFound();
-        
-        person.Links = InnerLinks(person);
+
+        person.Links = GetPersonLinks(person);
 
         return Ok(person);
     }
 
-    private Link[] InnerLinks(PersonDto person)
+    private Link[] GetPersonLinks(PersonDto person)
     {
         var linkParameters = new { document = person.Document };
-        var innerSelf = _linkService.CreateLink("self", nameof(GetPersonData), linkParameters);
-        var addresses = _linkService.CreateLink("addresses", nameof(GetAddresses), linkParameters);
-        var phones = _linkService.CreateLink("phones", nameof(GetPhones), linkParameters);
-        var products = _linkService.CreateLink("products", nameof(GetProducts), linkParameters);
+        var innerSelf = _linkService.CreateSelfLink(nameof(GetPersonData), linkParameters);
+        var addresses = _linkService.CreateLink(PersonRelationAddresses, nameof(GetAddresses), linkParameters);
+        var phones = _linkService.CreateLink(PersonRelationPhones, nameof(GetPhones), linkParameters);
+        var products = _linkService.CreateLink(PersonRelationProducts, nameof(GetProducts), linkParameters);
 
         var links = new[] { innerSelf, addresses, phones, products };
         return links;
     }
 
-    [HttpGet("{document}/addresses")]
-    public async Task<IActionResult> GetAddresses(string document, [FromQuery] PageParameters pageParameters, CancellationToken ct)
+    [HttpGet($"{{document}}/{PersonRelationAddresses}")]
+    public async Task<IActionResult> GetAddresses(string document, [FromQuery] PageParameters pageParameters,
+        CancellationToken ct)
     {
-        var addresses = _mapper.Map<Page<AddressDto>>(await _personRepository.GetAddresses(document, pageParameters, ct));
-        var linkParameters = new { document = document };
-        var self = _linkService.CreateLink(CollectionWithPagingFactory.SelfRelation, nameof(GetAddresses), linkParameters);
-        var collection = _collectionWithPagingFactory.Create(addresses, pageParameters, self);
+        var page = await _personRepository.GetAddresses(document, pageParameters, ct);
+        var pageDto = _mapper.Map<Page<AddressDto>>(page);
+        var self = _linkService.CreateSelfLink(nameof(GetAddresses), new { document });
+        var collection = _collectionWithPagingFactory.Create(pageDto, pageParameters, self);
         return Ok(collection);
     }
-    
-    [HttpGet("{document}/phones")]
-    public async Task<IActionResult> GetPhones(string document, [FromQuery] PageParameters pageParameters, CancellationToken ct)
+
+    [HttpGet($"{{document}}/{PersonRelationPhones}")]
+    public async Task<IActionResult> GetPhones(string document, [FromQuery] PageParameters pageParameters,
+        CancellationToken ct)
     {
-        var phones = _mapper.Map<Page<PhoneDto>>(await _personRepository.GetPhones(document, pageParameters, ct));
-        var linkParameters = new { document = document };
-        var self = _linkService.CreateLink(CollectionWithPagingFactory.SelfRelation, nameof(GetPhones), linkParameters);
-        var collection = _collectionWithPagingFactory.Create(phones, pageParameters, self);
+        var page = await _personRepository.GetPhones(document, pageParameters, ct);
+        var pageDto = _mapper.Map<Page<PhoneDto>>(page);
+        var self = _linkService.CreateSelfLink(nameof(GetPhones), new { document });
+        var collection = _collectionWithPagingFactory.Create(pageDto, pageParameters, self);
         return Ok(collection);
     }
-    
-    [HttpGet("{document}/products")]
-    public async Task<IActionResult> GetProducts(string document, [FromQuery] PageParameters pageParameters, CancellationToken ct)
+
+    [HttpGet($"{{document}}/{PersonRelationProducts}")]
+    public async Task<IActionResult> GetProducts(string document, [FromQuery] PageParameters pageParameters,
+        CancellationToken ct)
     {
-        var products = _mapper.Map<Page<ProdutctDto>>(await _personRepository.GetProducts(document, pageParameters, ct));
-        var linkParameters = new { document = document };
-        var self = _linkService.CreateLink(CollectionWithPagingFactory.SelfRelation, nameof(GetProducts), linkParameters);
-        var collection = _collectionWithPagingFactory.Create(products, pageParameters, self);
+        var page = await _personRepository.GetProducts(document, pageParameters, ct);
+        var pageDto = _mapper.Map<Page<ProductDto>>(page);
+        var self = _linkService.CreateSelfLink(nameof(GetProducts), new { document });
+        var collection = _collectionWithPagingFactory.Create(pageDto, pageParameters, self);
         return Ok(collection);
     }
 }
